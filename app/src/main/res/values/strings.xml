@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">Status Saver</string>
+    <string name="status_saver">Status Saver</string>
+    <string name="fast_direct_status_downloader">Fast &amp; Direct Status Downloader</string>
+    <string name="continue_text">Continue</string>
+    <string name="icon_border_desc">Icon border</string>
+    <string name="app_icon_desc">App icon</string>
+    <string name="app_language">App Language</string>
+    <string name="select">Select</string>
+    <string name="skip">Skip</string>
+    <string name="next">Next</string>
+    <string name="get_started">Get Started</string>
+    <string name="intro1_title">Save Video Status</string>
+    <string name="intro1_desc">Download videos in HD &amp; view them offline anytime, anywhere</string>
+    <string name="intro2_title">Save Image Status</string>
+    <string name="intro2_desc">Save high-quality photo statuses instantly with just one tap.</string>
+    <string name="intro3_title">Manage Your Saved</string>
+    <string name="intro3_desc">Share your saved photos and videos with\nfriends and family to manage them easily</string>
+    <string name="step_01">Step : 01</string>
+    <string name="step_02">Step : 02</string>
+    <string name="permission1_title">Grant access to media files</string>
+    <string name="permission1_desc">This permission lets the app save and access your current and future status content.</string>
+    <string name="permission2_title">Use this Folder</string>
+    <string name="permission2_desc">Grant access to store and view status files here</string>
+    <string name="done">Done</string>
+    <string name="permission_required">Permission Required</string>
+    <string name="permission_required_desc">This feature requires your permission.\nAllow access to continue.</string>
+    <string name="allow">Allow</string>
+    <string name="no_status_saved">No Status Saved</string>
+    <string name="no_status_saved_desc">You haven\'t saved any status yet. Save one\nto see it here.</string>
+    <string name="go_to_whatsapp">Go to Whatsapp</string>
+    <string name="nothing_saved_yet">Nothing Saved Yet</string>
+    <string name="nothing_saved_yet_desc">Save the Statuses you like.</string>
+    <string name="browse_statues">Browse statues</string>
+    <string name="image">Image</string>
+    <string name="video">Video</string>
+    <string name="saved">Saved</string>
+    <string name="settings">Settings</string>
+    <string name="how_to_use">How to use</string>
+    <string name="rate_us">Rate Us</string>
+    <string name="share_app">Share App</string>
+    <string name="feedback">Feedback</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="version">Version</string>
+    <string name="how_to_use_step_1">01. Open <![CDATA[<font color="#5CD362"><b>Updates</b></font>]]> in your WA App</string>
+    <string name="how_to_use_step_2">02. Tap &amp; Watch the <![CDATA[<font color="#5CD362"><b>Status Fully</b></font>]]> to Save</string>
+    <string name="how_to_use_step_3">03. Open <![CDATA[<font color="#5CD362"><b>Status Saver</b></font>]]> App to save</string>
+</resources>

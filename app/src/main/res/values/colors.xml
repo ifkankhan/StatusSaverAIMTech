@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="green_primary">#61D663</color>
+    <color name="green_progress_bg">#C5ECC6</color>
+    <color name="text_primary">#000000</color>
+    <color name="text_secondary">#9E9E9E</color>
+    <color name="green_light_bg">#F0FAF0</color>
+    <color name="gray_border">#EFEFEF</color>
+    <color name="top_bar_icon_bg">#3361D663</color>
+    <color name="tab_unselected">#B2B2B2</color>
+    <color name="gray_line">#E0E0E0</color>
+</resources>

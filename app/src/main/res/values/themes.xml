@@ -1,0 +1,24 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.StatusSaverAIM" parent="Theme.Material3.DayNight.NoActionBar">
+
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:statusBarColor">@color/green_primary</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">never</item>
+        <item name="android:forceDarkAllowed">false</item>
+
+        <!-- MOST IMPORTANT -->
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <!-- REAL FIX FOR ANDROID 14+ -->
+        <item name="android:fitsSystemWindows">true</item>
+    </style>
+
+    <style name="Theme.StatusSaverAIM" parent="Base.Theme.StatusSaverAIM" />
+
+    <!-- Custom Dialog Theme -->
+    <style name="TransparentDialogTheme" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+</resources>
