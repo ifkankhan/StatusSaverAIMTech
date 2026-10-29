@@ -2,6 +2,7 @@ package com.example.statussaveraim.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -12,6 +13,12 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.viewpager2.widget.ViewPager2
 import com.example.statussaveraim.R
 import com.example.statussaveraim.adapters.IntroAdapter
+import com.example.statussaveraim.ads.AdMob_Native
+import com.example.statussaveraim.ads.AdsConstant.homebottombanner
+import com.example.statussaveraim.ads.AdsConstant.homebottomnative
+import com.example.statussaveraim.ads.AdsConstant.intro1bottombanner
+import com.example.statussaveraim.ads.AdsConstant.intro1bottomnative
+import com.example.statussaveraim.ads.BannerAdWork
 import com.example.statussaveraim.databinding.ActivityIntroBinding
 import com.example.statussaveraim.models.IntroModel
 
@@ -27,11 +34,35 @@ class IntroActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-
+        showingBottomAds()
         setupViewPager()
         setupListeners()
     }
-
+    fun showingBottomAds() {
+        if (intro1bottombanner != 0) {
+            BannerAdWork.showAdmobBanner(
+                intro1bottombanner,
+                this,
+                binding.bannerADBottom.bannerContainer,
+                false,
+                this
+            )
+        } else {
+            binding.bannerADBottom.bannerAdShimmerView.visibility = View.GONE
+            binding.bannerADBottom.bannerContainer.visibility = View.GONE
+            AdMob_Native.showNativeShimmer(
+                binding.NativeADBottom.shimmerLayout,
+                intro1bottomnative
+            )
+            AdMob_Native.showNativeAdmob(
+                intro1bottomnative,
+                binding.NativeADBottom.topNativeAdFrameLayout,
+                this,
+                false,
+                this
+            )
+        }
+    }
     private fun setupViewPager() {
         val introList = listOf(
             IntroModel(

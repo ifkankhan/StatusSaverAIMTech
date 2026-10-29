@@ -23,6 +23,24 @@ android {
             optimization {
                 enable = false
             }
+            resValue("string", "ADMOBE_ID", "ca-app-pub-4016151566711692~1327740831")
+            resValue("string", "AM_BANNER_AD_ID", "ca-app-pub-3940256099942544/2014213617")
+            resValue("string", "AM_INTER_AD_ID", "ca-app-pub-3940256099942544/1033173712")
+            resValue("string", "AM_SPLASH_APPOPEN_AD_ID", "ca-app-pub-3940256099942544/9257395921")
+            resValue("string", "AM_SPLASH_INTER_AD_ID", "ca-app-pub-3940256099942544/1033173712")
+            resValue("string", "AM_NATIVE_AD_ID", "ca-app-pub-3940256099942544/2247696110")
+            resValue("string", "AM_NATIVE_INTRO", "ca-app-pub-3940256099942544/2247696110")
+            resValue("string", "AM_APPOPEN_AD_ID", "ca-app-pub-3940256099942544/9257395921")
+        }
+        debug {
+            resValue("string", "ADMOBE_ID", "ca-app-pub-4016151566711692~1327740831")
+            resValue("string", "AM_BANNER_AD_ID", "ca-app-pub-3940256099942544/2014213617")
+            resValue("string", "AM_INTER_AD_ID", "ca-app-pub-3940256099942544/1033173712")
+            resValue("string", "AM_SPLASH_APPOPEN_AD_ID", "ca-app-pub-3940256099942544/9257395921")
+            resValue("string", "AM_SPLASH_INTER_AD_ID", "ca-app-pub-3940256099942544/1033173712")
+            resValue("string", "AM_NATIVE_AD_ID", "ca-app-pub-3940256099942544/2247696110")
+            resValue("string", "AM_NATIVE_INTRO", "ca-app-pub-3940256099942544/2247696110")
+            resValue("string", "AM_APPOPEN_AD_ID", "ca-app-pub-3940256099942544/9257395921")
         }
     }
     compileOptions {
@@ -32,6 +50,7 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        resValues = true
     }
     if (file("google-services.json").exists()) {
         apply(plugin = "com.google.gms.google-services")
@@ -51,6 +70,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+    implementation(libs.androidx.lifecycle.process)
 
     // Firebase
     implementation(platform(libs.firebase.bom))
@@ -63,4 +83,12 @@ dependencies {
     implementation("androidx.documentfile:documentfile:1.0.1")
     //google billing
     implementation("com.android.billingclient:billing:9.1.0")
+    //Ads
+    implementation("com.google.android.gms:play-services-ads:24.4.0")
+    //shimmer
+    implementation("com.facebook.shimmer:shimmer:0.5.0")
+
+    //SDP
+    implementation("com.intuit.sdp:sdp-android:1.0.6")
+    implementation("com.intuit.ssp:ssp-android:1.0.6")
 }

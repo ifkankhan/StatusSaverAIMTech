@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:background="@drawable/roundedcorner_bg"
+    android:layout_height="match_parent">
+
+    <include
+        android:visibility="gone"
+        android:id="@+id/shimmerSmall"
+        layout="@layout/native_shimmer_style_small"/>
+    <include
+        android:visibility="gone"
+        android:id="@+id/shimmer3"
+        layout="@layout/shimmer3"/>
+    <include
+        android:visibility="gone"
+        android:id="@+id/shimmer1"
+        layout="@layout/shimmer1"/>
+
+
+    <include
+        android:visibility="gone"
+        android:id="@+id/shimmerMed"
+        layout="@layout/native_shimmer_style_med"/>
+    <include
+        android:visibility="gone"
+        android:id="@+id/shimmer4"
+        layout="@layout/shimmer4"/>
+
+
+    <include
+        android:visibility="gone"
+        android:id="@+id/shimmerNormal"
+        layout="@layout/native_shimmer_style_norm"/>
+
+
+    <include
+        android:visibility="gone"
+        android:id="@+id/shimmersmalvideo"
+        layout="@layout/nativeshimmer_videosmall"/>
+    <include
+        android:visibility="gone"
+        android:id="@+id/shimmer5"
+        layout="@layout/shimmer5"/>
+    <include
+        android:visibility="gone"
+        android:id="@+id/shimmer6"
+        layout="@layout/shimmer6"/>
+    <include
+        android:visibility="gone"
+        android:id="@+id/shimmer7"
+        layout="@layout/shimmer7"/>
+    <include
+        android:visibility="gone"
+        android:id="@+id/shimmer8"
+        layout="@layout/shimmer8"/>
+    <include
+        android:visibility="gone"
+        android:id="@+id/shimmer9"
+        layout="@layout/shimmer9"/>
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

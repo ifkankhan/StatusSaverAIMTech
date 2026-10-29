@@ -11,4 +11,6 @@
     <color name="top_bar_icon_bg">#3361D663</color>
     <color name="tab_unselected">#B2B2B2</color>
     <color name="gray_line">#E0E0E0</color>
+    <color name="premium_light_green">#E7FFE8</color>
+    <color name="premium_tag_bg">#61D663</color>
 </resources>

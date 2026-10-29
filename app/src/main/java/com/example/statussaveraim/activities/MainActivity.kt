@@ -27,6 +27,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.statussaveraim.R
 import com.example.statussaveraim.adapters.SavedStatusAdapter
 import com.example.statussaveraim.adapters.StatusAdapter
+import com.example.statussaveraim.ads.AdMob_Native
+import com.example.statussaveraim.ads.AdsConstant.homebottombanner
+import com.example.statussaveraim.ads.AdsConstant.homebottomnative
+import com.example.statussaveraim.ads.BannerAdWork
 import com.example.statussaveraim.databinding.ActivityMainBinding
 import com.example.statussaveraim.models.WhatsAppModelClass
 import com.example.statussaveraim.utils.SharedPrefsHelper
@@ -46,7 +50,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         sharedPrefs = SharedPrefsHelper(this)
-
+        showingBottomAds()
         setupTabs()
         setupWhatsappSwitch()
         
@@ -67,7 +71,31 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
-
+    fun showingBottomAds() {
+        if (homebottombanner != 0) {
+            BannerAdWork.showAdmobBanner(
+                homebottombanner,
+                this,
+                binding.bannerADBottom.bannerContainer,
+                false,
+                this
+            )
+        } else {
+            binding.bannerADBottom.bannerAdShimmerView.visibility = View.GONE
+            binding.bannerADBottom.bannerContainer.visibility = View.GONE
+            AdMob_Native.showNativeShimmer(
+                binding.NativeADBottom.shimmerLayout,
+                homebottomnative
+            )
+            AdMob_Native.showNativeAdmob(
+                homebottomnative,
+                binding.NativeADBottom.topNativeAdFrameLayout,
+                this,
+                false,
+                this
+            )
+        }
+    }
     private fun showHowToUseDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_how_to_use, null)
         val dialog = AlertDialog.Builder(this, R.style.TransparentDialogTheme)
