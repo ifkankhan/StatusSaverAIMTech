@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.text.Html
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -12,6 +13,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.statussaveraim.R
+import com.example.statussaveraim.ads.AdMob_Native
+import com.example.statussaveraim.ads.AdsConstant.exitbottombanner
+import com.example.statussaveraim.ads.AdsConstant.exitbottomnative
+import com.example.statussaveraim.ads.AdsConstant.homebottombanner
+import com.example.statussaveraim.ads.AdsConstant.homebottomnative
+import com.example.statussaveraim.ads.BannerAdWork
 import com.example.statussaveraim.databinding.ActivityExitBinding
 
 class ExitActivity : AppCompatActivity() {
@@ -23,10 +30,34 @@ class ExitActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-
+        showingBottomAds()
         setupListeners()
     }
-
+    fun showingBottomAds() {
+        if (exitbottombanner != 0) {
+            BannerAdWork.showAdmobBanner(
+                exitbottombanner,
+                this,
+                binding.bannerADBottom.bannerContainer,
+                false,
+                this
+            )
+        } else {
+            binding.bannerADBottom.bannerAdShimmerView.visibility = View.GONE
+            binding.bannerADBottom.bannerContainer.visibility = View.GONE
+            AdMob_Native.showNativeShimmer(
+                binding.NativeADBottom.shimmerLayout,
+                exitbottomnative
+            )
+            AdMob_Native.showNativeAdmob(
+                exitbottomnative,
+                binding.NativeADBottom.topNativeAdFrameLayout,
+                this,
+                false,
+                this
+            )
+        }
+    }
     private fun setupListeners() {
         // Exit App
         binding.btnLeaveApp.setOnClickListener {

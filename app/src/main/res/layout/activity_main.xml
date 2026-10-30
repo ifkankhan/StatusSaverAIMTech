@@ -13,8 +13,8 @@
         android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
         android:layout_marginTop="18dp"
+        android:paddingHorizontal="16dp"
         android:paddingBottom="16dp"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -38,8 +38,8 @@
                 android:background="@drawable/bg_top_bar_icon"
 
                 android:padding="2dp"
-                app:tint="@color/green_primary"
-                android:src="@drawable/whatsapp_main_top_icn" />
+                android:src="@drawable/whatsapp_main_top_icn"
+                app:tint="@color/green_primary" />
 
             <ImageView
                 android:id="@+id/ivWhatsappBusiness"
@@ -47,8 +47,8 @@
                 android:layout_height="28dp"
                 android:layout_marginStart="4dp"
                 android:padding="6dp"
-                app:tint="@color/white"
-                android:src="@drawable/buss_wa_main_icon" />
+                android:src="@drawable/buss_wa_main_icon"
+                app:tint="@color/white" />
         </LinearLayout>
 
         <TextView
@@ -87,8 +87,8 @@
                 android:id="@+id/btnSettings"
                 android:layout_width="28dp"
                 android:layout_height="28dp"
-                android:backgroundTint="#1A61D663"
                 android:background="@drawable/bg_top_bar_icon"
+                android:backgroundTint="#1A61D663"
                 android:padding="6dp"
                 android:src="@drawable/settings_main_icn" />
         </LinearLayout>
@@ -221,7 +221,28 @@
         android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottomAds"
         app:layout_constraintTop_toBottomOf="@id/tabLayout" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/bottomAds"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <include
+            android:id="@+id/bannerADBottom"
+            layout="@layout/banner_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <include
+            android:id="@+id/NativeADBottom"
+            layout="@layout/native_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

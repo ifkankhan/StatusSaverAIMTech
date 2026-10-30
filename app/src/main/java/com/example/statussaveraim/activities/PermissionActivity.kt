@@ -7,12 +7,19 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.viewpager2.widget.ViewPager2
 import com.example.statussaveraim.R
 import com.example.statussaveraim.adapters.PermissionAdapter
+import com.example.statussaveraim.ads.AdMob_Native
+import com.example.statussaveraim.ads.AdsConstant.homebottombanner
+import com.example.statussaveraim.ads.AdsConstant.homebottomnative
+import com.example.statussaveraim.ads.AdsConstant.permbottombanner
+import com.example.statussaveraim.ads.AdsConstant.permbottomnative
+import com.example.statussaveraim.ads.BannerAdWork
 import com.example.statussaveraim.databinding.ActivityPermissionBinding
 import com.example.statussaveraim.models.PermissionModel
 import com.example.statussaveraim.utils.SharedPrefsHelper
@@ -25,52 +32,81 @@ class PermissionActivity : AppCompatActivity() {
 
     private lateinit var permissionAdapter: PermissionAdapter
 
-    private val whatsappLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK) {
-            result.data?.data?.let { uri ->
-                try {
-                    val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    contentResolver.takePersistableUriPermission(uri, takeFlags)
+    private val whatsappLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                result.data?.data?.let { uri ->
+                    try {
+                        val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        contentResolver.takePersistableUriPermission(uri, takeFlags)
 
-                    getSharedPreferences("app_settings", MODE_PRIVATE).edit().apply {
-                        putString("whatsapp_path", uri.toString())
-                        apply()
+                        getSharedPreferences("app_settings", MODE_PRIVATE).edit().apply {
+                            putString("whatsapp_path", uri.toString())
+                            apply()
+                        }
+                        updateWhatsAppGrantedUI()
+                        checkCanContinue()
+
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
-                    updateWhatsAppGrantedUI()
-                    checkCanContinue()
-
-                } catch (e: Exception) {
-                    e.printStackTrace()
                 }
             }
         }
+
+    fun showingBottomAds() {
+        if (permbottombanner != 0) {
+            BannerAdWork.showAdmobBanner(
+                permbottombanner,
+                this,
+                binding.bannerADBottom.bannerContainer,
+                false,
+                this
+            )
+        } else {
+            binding.bannerADBottom.bannerAdShimmerView.visibility = View.GONE
+            binding.bannerADBottom.bannerContainer.visibility = View.GONE
+            AdMob_Native.showNativeShimmer(
+                binding.NativeADBottom.shimmerLayout,
+                permbottomnative
+            )
+            AdMob_Native.showNativeAdmob(
+                permbottomnative,
+                binding.NativeADBottom.topNativeAdFrameLayout,
+                this,
+                false,
+                this
+            )
+        }
     }
 
-    private val businessLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK) {
-            result.data?.data?.let { uri ->
-                try {
-                    val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    contentResolver.takePersistableUriPermission(uri, takeFlags)
+    private val businessLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                result.data?.data?.let { uri ->
+                    try {
+                        val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        contentResolver.takePersistableUriPermission(uri, takeFlags)
 
-                    getSharedPreferences("app_settings", MODE_PRIVATE).edit().apply {
-                        putString("business_path", uri.toString())
-                        apply()
+                        getSharedPreferences("app_settings", MODE_PRIVATE).edit().apply {
+                            putString("business_path", uri.toString())
+                            apply()
+                        }
+
+                        updateBusinessGrantedUI()
+                        checkCanContinue()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
-
-                    updateBusinessGrantedUI()
-                    checkCanContinue()
-                } catch (e: Exception) {
-                    e.printStackTrace()
                 }
             }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
+        showingBottomAds()
         setupViewPager()
         setupListeners()
     }
@@ -93,7 +129,8 @@ class PermissionActivity : AppCompatActivity() {
 
         permissionAdapter = PermissionAdapter(permissionList)
         binding.viewPager.adapter = permissionAdapter
-        binding.viewPager.isUserInputEnabled = false // Optional: Disable swiping to force button clicks
+        binding.viewPager.isUserInputEnabled =
+            false // Optional: Disable swiping to force button clicks
 
         binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
@@ -146,8 +183,10 @@ class PermissionActivity : AppCompatActivity() {
         val busPath = prefs.getString("business_path", null)
         val persistedPermissions = contentResolver.persistedUriPermissions
 
-        val waGranted = waPath != null && persistedPermissions.any { it.uri == Uri.parse(waPath) && it.isReadPermission }
-        val busGranted = busPath != null && persistedPermissions.any { it.uri == Uri.parse(busPath) && it.isReadPermission }
+        val waGranted =
+            waPath != null && persistedPermissions.any { it.uri == Uri.parse(waPath) && it.isReadPermission }
+        val busGranted =
+            busPath != null && persistedPermissions.any { it.uri == Uri.parse(busPath) && it.isReadPermission }
 
         val canContinue = if (hasWhatsApp && hasBusiness) {
             waGranted || busGranted
@@ -191,7 +230,8 @@ class PermissionActivity : AppCompatActivity() {
     private fun openWhatsAppFolderPicker() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val waUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia/document/primary%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia%2F.Statuses")
+                val waUri =
+                    Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia/document/primary%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia%2F.Statuses")
                 putExtra(DocumentsContract.EXTRA_INITIAL_URI, waUri)
             }
             putExtra("android.content.extra.SHOW_ADVANCED", true)
@@ -207,7 +247,8 @@ class PermissionActivity : AppCompatActivity() {
     private fun openBusinessFolderPicker() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val businessUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia/document/primary%3AAndroid%2Fmedia%2Fcom.whatsapp.w4b%2FWhatsApp%20Business%2FMedia%2F.Statuses")
+                val businessUri =
+                    Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia/document/primary%3AAndroid%2Fmedia%2Fcom.whatsapp.w4b%2FWhatsApp%20Business%2FMedia%2F.Statuses")
                 putExtra(DocumentsContract.EXTRA_INITIAL_URI, businessUri)
             }
             putExtra("android.content.extra.SHOW_ADVANCED", true)
@@ -224,7 +265,7 @@ class PermissionActivity : AppCompatActivity() {
         val sharedPrefs = SharedPrefsHelper(this)
         sharedPrefs.hasGivenPermission = true
         sharedPrefs.isFirstTimeLaunch = false
-        
+
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
         finish()

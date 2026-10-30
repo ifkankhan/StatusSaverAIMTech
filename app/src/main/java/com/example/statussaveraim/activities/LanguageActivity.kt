@@ -2,14 +2,16 @@ package com.example.statussaveraim.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.statussaveraim.adapters.LanguageAdapter
+import com.example.statussaveraim.ads.AdMob_Native
+import com.example.statussaveraim.ads.AdsConstant.languagebottombanner
+import com.example.statussaveraim.ads.AdsConstant.languagebottomnative
+import com.example.statussaveraim.ads.BannerAdWork
 import com.example.statussaveraim.databinding.ActivityLanguageBinding
 import com.example.statussaveraim.models.LanguageModel
-import kotlin.getValue
 
 class LanguageActivity : AppCompatActivity() {
 
@@ -22,12 +24,13 @@ class LanguageActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-
+        showingBottomAds()
         setupRecyclerView()
 
         binding.btnSelect.setOnClickListener {
             if (selectedLanguage != null) {
-                Toast.makeText(this, "Selected: ${selectedLanguage?.name}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Selected: ${selectedLanguage?.name}", Toast.LENGTH_SHORT)
+                    .show()
                 // Navigate to Intro Activity
                 val intent = Intent(this, IntroActivity::class.java)
                 startActivity(intent)
@@ -35,6 +38,32 @@ class LanguageActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Please select a language", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    fun showingBottomAds() {
+        if (languagebottombanner != 0) {
+            BannerAdWork.showAdmobBanner(
+                languagebottombanner,
+                this,
+                binding.bannerADBottom.bannerContainer,
+                false,
+                this
+            )
+        } else {
+            binding.bannerADBottom.bannerAdShimmerView.visibility = View.GONE
+            binding.bannerADBottom.bannerContainer.visibility = View.GONE
+            AdMob_Native.showNativeShimmer(
+                binding.NativeADBottom.shimmerLayout,
+                languagebottomnative
+            )
+            AdMob_Native.showNativeAdmob(
+                languagebottomnative,
+                binding.NativeADBottom.topNativeAdFrameLayout,
+                this,
+                false,
+                this
+            )
         }
     }
 

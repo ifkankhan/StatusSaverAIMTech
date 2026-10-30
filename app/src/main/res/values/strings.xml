@@ -9,6 +9,8 @@
     <string name="select">Select</string>
     <string name="skip">Skip</string>
     <string name="next">Next</string>
+    <string name="admob_ad_id">ca-app-pub-1831800168999377~4883629699</string>
+    <string name="subscription_auto_"><![CDATA[Subscription Auto Renews, You Can Cancel any time. Your Subscriptions can be managed or cancelled under your google PlayStore account profile > Payments and Subscriptions > Limited usage without subscriptions>]]></string>
     <string name="get_started">Get Started</string>
     <string name="intro1_title">Save Video Status</string>
     <string name="intro1_desc">Download videos in HD &amp; view them offline anytime, anywhere</string>
@@ -45,4 +47,20 @@
     <string name="how_to_use_step_1">01. Open <![CDATA[<font color="#5CD362"><b>Updates</b></font>]]> in your WA App</string>
     <string name="how_to_use_step_2">02. Tap &amp; Watch the <![CDATA[<font color="#5CD362"><b>Status Fully</b></font>]]> to Save</string>
     <string name="how_to_use_step_3">03. Open <![CDATA[<font color="#5CD362"><b>Status Saver</b></font>]]> App to save</string>
+    <string name="premium_title">Get Status Saver Pro</string>
+    <string name="premium_subtitle">Unlock unlimited downloads and\npremium features.</string>
+    <string name="premium_feature_1_title">No Ads, Ever</string>
+    <string name="premium_feature_1_desc">for a seamless experience</string>
+    <string name="premium_feature_2_title">Save High-Quality Status</string>
+    <string name="premium_feature_2_desc">download photos &amp; videos in HD</string>
+    <string name="premium_feature_3_title">Unlimited use of Tools</string>
+    <string name="premium_feature_3_desc">Access to all new features and updates</string>
+    <string name="weekly_plan">Weekly</string>
+    <string name="weekly_price">$9.99/week</string>
+    <string name="yearly_plan">Yearly</string>
+    <string name="yearly_free_trial">3-Day Free Trial</string>
+    <string name="yearly_price_then">then $19.99/year</string>
+    <string name="best_offer">Best Offer</string>
+    <string name="terms_of_service">Terms of Service</string>
+    <string name="restore_purchases">Restore Purchases</string>
 </resources>
