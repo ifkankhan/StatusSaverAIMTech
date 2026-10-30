@@ -20,8 +20,14 @@ android {
 
     buildTypes {
         release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             optimization {
-                enable = false
+                enable = true
             }
             resValue("string", "ADMOBE_ID", "ca-app-pub-4016151566711692~1327740831")
             resValue("string", "AM_BANNER_AD_ID", "ca-app-pub-3940256099942544/2014213617")
@@ -33,6 +39,12 @@ android {
             resValue("string", "AM_APPOPEN_AD_ID", "ca-app-pub-3940256099942544/9257395921")
         }
         debug {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             resValue("string", "ADMOBE_ID", "ca-app-pub-4016151566711692~1327740831")
             resValue("string", "AM_BANNER_AD_ID", "ca-app-pub-3940256099942544/2014213617")
             resValue("string", "AM_INTER_AD_ID", "ca-app-pub-3940256099942544/1033173712")

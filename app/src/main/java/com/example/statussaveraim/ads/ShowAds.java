@@ -35,12 +35,17 @@ import com.google.android.gms.ads.interstitial.InterstitialAd;
 public class ShowAds {
 
     public static void backPressInterstitial(final Activity context, final InterstitialAd mInterstitialAd) {
+        BillingHelper billing = new BillingHelper(context);
 
+        if (billing.shouldShowAds()) {
 
-        if (Constants.INSTANCE.getIsAppOnTimer()) {
-            backPressForTimer(context, mInterstitialAd);
+            if (Constants.INSTANCE.getIsAppOnTimer()) {
+                backPressForTimer(context, mInterstitialAd);
+            } else {
+                backPressForClick(context, mInterstitialAd);
+            }
         } else {
-            backPressForClick(context, mInterstitialAd);
+            context.finish();
         }
        /* } else {
             if (Constants.INSTANCE.getIsAppOnTimer()) {
@@ -155,11 +160,18 @@ public class ShowAds {
     public static void directAdsInterstitial(final Context context,
                                              final InterstitialAd mInterstitialAd, final Intent intent) {
 
-        if (Constants.INSTANCE.getIsAppOnTimer()) {
-            forTimerAds(context, mInterstitialAd, intent);
+        BillingHelper billing = new BillingHelper(context);
+
+        if (billing.shouldShowAds()) {
+            if (Constants.INSTANCE.getIsAppOnTimer()) {
+                forTimerAds(context, mInterstitialAd, intent);
+            } else {
+                forClickAds(context, mInterstitialAd, intent);
+            }
         } else {
-            forClickAds(context, mInterstitialAd, intent);
+            context.startActivity(intent);
         }
+
                /* } else {
                     if (Constants.INSTANCE.getIsAppOnTimer()) {
                        

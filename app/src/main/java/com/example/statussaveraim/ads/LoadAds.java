@@ -57,29 +57,34 @@ public class LoadAds {
 
     //1
     public static void preLoadAdsHoneyBee(final Context context) {
+        BillingHelper billing=new BillingHelper(context);
 
-        //admobeload
-        if (admobInterstitialAd == null) {
-            canReLoadedAdMob = false;
-            InterstitialAd.load(context, LoadAds.interstitial_admob_inApp, new AdRequest.Builder().build(), new InterstitialAdLoadCallback() {
-                @Override
-                public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
-                    super.onAdLoaded(interstitialAd);
-                    Log.d("ConstantAdsLoadAds", "Admob loaded");
-                    canReLoadedAdMob = true;
-                    admobInterstitialAd = interstitialAd;
-                }
+        if(billing.shouldShowAds()) {
+            //admobeload
+            if (admobInterstitialAd == null) {
+                canReLoadedAdMob = false;
+                InterstitialAd.load(context, LoadAds.interstitial_admob_inApp, new AdRequest.Builder().build(), new InterstitialAdLoadCallback() {
+                    @Override
+                    public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                        super.onAdLoaded(interstitialAd);
+                        Log.d("ConstantAdsLoadAds", "Admob loaded");
+                        canReLoadedAdMob = true;
+                        admobInterstitialAd = interstitialAd;
+                    }
 
-                @Override
-                public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                    super.onAdFailedToLoad(loadAdError);
-                    Log.d("ConstantAdsLoadAds", "Admob Faild: " + loadAdError.toString());
-                    canReLoadedAdMob = true;
-                    admobInterstitialAd = null;
-                }
-            });
-        } else {
-            Log.d("ConstantAdsLoadAds", "admobe AlReady loaded");
+                    @Override
+                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                        super.onAdFailedToLoad(loadAdError);
+                        Log.d("ConstantAdsLoadAds", "Admob Faild: " + loadAdError.toString());
+                        canReLoadedAdMob = true;
+                        admobInterstitialAd = null;
+                    }
+                });
+            } else {
+                Log.d("ConstantAdsLoadAds", "admobe AlReady loaded");
+            }
+        }else{
+            Log.d("ConstantAdsLoadAds", "Admobe Controled from Firebase");
         }
 
     }
@@ -92,6 +97,9 @@ public class LoadAds {
 
 
     public static void directAdmobAd(final Context context, String adUnitAdmob, OnVideoLoad videoCallback) {
+        BillingHelper billing=new BillingHelper(context);
+
+        if(billing.shouldShowAds()) {
         if (fixInterstitialAd == null) {
             //canReLoadedAdMob = false;
             InterstitialAd.load(context, adUnitAdmob, new AdRequest.Builder().build(), new InterstitialAdLoadCallback() {
@@ -117,7 +125,9 @@ public class LoadAds {
             Log.d("ConstantAdsLoadAds", "admobe AlReady loaded");
             videoCallback.onLoaded();
         }
-
+        }else{
+            videoCallback.onFailed();
+        }
     }
 
 

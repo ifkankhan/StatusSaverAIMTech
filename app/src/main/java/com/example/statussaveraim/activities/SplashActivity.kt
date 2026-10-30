@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.statussaveraim.R
 import com.example.statussaveraim.ads.AppOpenSplash
+import com.example.statussaveraim.ads.BillingHelper
 import com.example.statussaveraim.ads.LoadAds
 import com.example.statussaveraim.ads.LoadAds.shouldShowAdmob
 import com.example.statussaveraim.ads.ShowAds.showingDirectAd
@@ -92,6 +93,8 @@ class SplashActivity : AppCompatActivity() {
 
         } catch (e: Exception) {
         }
+        val billing = BillingHelper(this)
+        if (billing.shouldShowAds()) {
         if (value == 2) {
             LoadAds.loadDirectAd(
                 this,
@@ -114,7 +117,8 @@ class SplashActivity : AppCompatActivity() {
                         binding.btnContinue.visibility = View.VISIBLE
                     }
                 })
-        } else {
+        }
+        else {
             val splashAd = MyApp.appOpenSplash
             if (shouldShowAdmob && splashAd != null) {
                 splashAd.loadStreetViewTruckCTStartAppOpenAd(
@@ -138,6 +142,9 @@ class SplashActivity : AppCompatActivity() {
             } else {
                 moveToMain()
             }
+        }
+        } else {
+            moveToMain()
         }
     }
 

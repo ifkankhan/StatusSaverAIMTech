@@ -26,6 +26,8 @@ object AdsConstant {
 
 
     var MainAdsControl: String? = null
+
+    var willAllAdsNotShow = true
     var isPurchase = false
     var RewardedIntestritialId = ""
     var RewarededvideoId = ""

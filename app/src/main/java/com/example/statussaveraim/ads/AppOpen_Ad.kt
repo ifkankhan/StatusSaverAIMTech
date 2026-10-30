@@ -63,8 +63,8 @@ class AppOpen_Ad(private val myApplication: MyApp) : LifecycleObserver,
     }
 
     fun showHoneyBeeMapNavigationStartAppOpenAd() {
-
-        if (runningActivity != null && !runningActivity!!.isFinishing && !runningActivity!!.isDestroyed) {
+        val billing = BillingHelper(myApplication)
+        if (runningActivity != null && !runningActivity!!.isFinishing && !runningActivity!!.isDestroyed   && billing.shouldShowAds()) {
             try {
                 val dialog = Dialog(runningActivity!!)
 
@@ -142,7 +142,8 @@ class AppOpen_Ad(private val myApplication: MyApp) : LifecycleObserver,
 
     fun loadHoneyBeeMapNavigationStartAppOpenAd() {
 
-        if (isStartAdAvailable) {
+        val billing = BillingHelper(myApplication)
+        if (isStartAdAvailable || !billing.shouldShowAds()) {
             Log.d(TAG, "Ad is available App Open Ad ")
         } else {
             Log.d(TAG, "Ad requesting App Open Ad ")

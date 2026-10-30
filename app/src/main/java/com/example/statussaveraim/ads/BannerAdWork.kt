@@ -56,9 +56,11 @@ object BannerAdWork {
         lifecycleOwner: LifecycleOwner,
         adId: String = ""
     ) {
+        val billing = BillingHelper(context)
 
-        if (adOnOff == 0 || isPurchase) {
 
+        if (adOnOff == 0 || isPurchase || !billing.shouldShowAds()) {
+            frameLayout!!.visibility = View.GONE
             return
         }
 

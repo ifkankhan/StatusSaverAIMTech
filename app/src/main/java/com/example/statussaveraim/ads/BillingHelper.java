@@ -13,7 +13,7 @@ public class BillingHelper {
     public boolean shouldShowAds() {
         return !((billingPreferences.getBoolean("monthly_subscription", false)) ||
                 (billingPreferences.getBoolean("weekly_subscription", false)) ||
-                (billingPreferences.getBoolean("yearly_subscription", false)));
+                (billingPreferences.getBoolean("yearly_subscription", false)) || AdsConstant.INSTANCE.getWillAllAdsNotShow());
 
     }
 }
