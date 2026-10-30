@@ -1,5 +1,6 @@
 package com.example.statussaveraim.activities
 
+import android.app.Dialog
 import android.content.ContentValues
 import android.content.Intent
 import android.content.res.ColorStateList
@@ -15,8 +16,10 @@ import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.MediaController
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.VideoView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -24,6 +27,7 @@ import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.example.statussaveraim.R
 import com.example.statussaveraim.adapters.SavedStatusAdapter
 import com.example.statussaveraim.adapters.StatusAdapter
@@ -302,15 +306,19 @@ class MainActivity : AppCompatActivity() {
             rv.visibility = View.VISIBLE
             tvEmpty.visibility = View.GONE
             rv.layoutManager = GridLayoutManager(this, 3)
-            val adapter = StatusAdapter(list) { model, position ->
-                val destUri = saveStatusItem(model)
-                if (destUri != null) {
-                    Toast.makeText(this, "Saved to Gallery!", Toast.LENGTH_SHORT).show()
-                    (rv.adapter as StatusAdapter).markAsSaved(model.uri)
-                } else {
-                    Toast.makeText(this, "Failed to save", Toast.LENGTH_SHORT).show()
+            val adapter = StatusAdapter(
+                statusList = list,
+                onItemClicked = { model -> openFullMediaDialog(model) },
+                onDownloadClicked = { model, position ->
+                    val destUri = saveStatusItem(model)
+                    if (destUri != null) {
+                        Toast.makeText(this, "Saved to Gallery!", Toast.LENGTH_SHORT).show()
+                        (rv.adapter as StatusAdapter).markAsSaved(model.uri)
+                    } else {
+                        Toast.makeText(this, "Failed to save", Toast.LENGTH_SHORT).show()
+                    }
                 }
-            }
+            )
             rv.adapter = adapter
         }
     }
@@ -332,10 +340,75 @@ class MainActivity : AppCompatActivity() {
             
             val adapter = SavedStatusAdapter(
                 statusList = list,
+                onItemClicked = { model -> openFullMediaDialog(model) },
                 onShareClicked = { model -> shareStatus(model) },
                 onDeleteClicked = { model -> deleteStatus(model) }
             )
             rv.adapter = adapter
+        }
+    }
+
+    private fun openFullMediaDialog(model: WhatsAppModelClass) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_full_media_preview, null)
+        val dialog = Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        dialog.setContentView(dialogView)
+
+        val ivFullImage = dialogView.findViewById<ImageView>(R.id.ivFullImage)
+        val videoView = dialogView.findViewById<VideoView>(R.id.videoView)
+        val btnClose = dialogView.findViewById<ImageView>(R.id.btnClose)
+        val btnShare = dialogView.findViewById<ImageView>(R.id.btnShare)
+
+        btnClose.setOnClickListener { dialog.dismiss() }
+
+        btnShare?.setOnClickListener {
+            shareStatus(model)
+        }
+
+        val uri = Uri.parse(model.uri)
+
+        if (model.isVideo) {
+            ivFullImage.visibility = View.GONE
+            videoView.visibility = View.VISIBLE
+
+            val mediaController = MediaController(this)
+            mediaController.setAnchorView(videoView)
+            videoView.setMediaController(mediaController)
+            videoView.setVideoURI(uri)
+            videoView.setOnPreparedListener { mp ->
+                mp.isLooping = true
+                videoView.start()
+            }
+            videoView.setOnErrorListener { _, _, _ ->
+                openInExternalApp(model)
+                true
+            }
+        } else {
+            videoView.visibility = View.GONE
+            ivFullImage.visibility = View.VISIBLE
+            ivFullImage.load(uri) {
+                crossfade(true)
+            }
+        }
+
+        dialog.setOnDismissListener {
+            if (model.isVideo) {
+                videoView.stopPlayback()
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun openInExternalApp(model: WhatsAppModelClass) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                val type = if (model.isVideo) "video/*" else "image/*"
+                setDataAndType(Uri.parse(model.uri), type)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Cannot play/view media", Toast.LENGTH_SHORT).show()
         }
     }
 

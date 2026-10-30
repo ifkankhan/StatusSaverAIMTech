@@ -4,16 +4,14 @@ plugins {
 
 android {
     namespace = "com.example.statussaveraim"
-    compileSdk {
-        version = release(37)
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "statussaver.statusdownloader.downloadstatus.videoimagesaver.wasaver"
         minSdk = 24
-        targetSdk = 37
-        versionCode = 2
-        versionName = "1.0.2"
+        targetSdk = 36
+        versionCode = 4
+        versionName = "1.0.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -64,10 +62,8 @@ android {
         buildConfig = true
         resValues = true
     }
-    if (file("google-services.json").exists()) {
-        apply(plugin = "com.google.gms.google-services")
-        apply(plugin = "com.google.firebase.crashlytics")
-    }}
+}
+
 if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
     apply(plugin = "com.google.firebase.crashlytics")

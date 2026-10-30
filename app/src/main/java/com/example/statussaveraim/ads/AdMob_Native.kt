@@ -57,8 +57,9 @@ object AdMob_Native {
         adId: String = ""
     ) {
 
+        val billing = BillingHelper(requireActivity)
 
-        if (visible == 0 || isPurchase) {
+        if (visible == 0 || isPurchase || !billing.shouldShowAds()) {
 
             adcontainer.visibility = View.GONE
             return
