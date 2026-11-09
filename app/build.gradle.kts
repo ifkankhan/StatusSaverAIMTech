@@ -29,14 +29,17 @@ android {
             optimization {
                 enable = true
             }
-            resValue("string", "ADMOBE_ID", "ca-app-pub-4016151566711692~1327740831")
-            resValue("string", "AM_BANNER_AD_ID", "ca-app-pub-3940256099942544/2014213617")
-            resValue("string", "AM_INTER_AD_ID", "ca-app-pub-3940256099942544/1033173712")
-            resValue("string", "AM_SPLASH_APPOPEN_AD_ID", "ca-app-pub-3940256099942544/9257395921")
-            resValue("string", "AM_SPLASH_INTER_AD_ID", "ca-app-pub-3940256099942544/1033173712")
-            resValue("string", "AM_NATIVE_AD_ID", "ca-app-pub-3940256099942544/2247696110")
-            resValue("string", "AM_NATIVE_INTRO", "ca-app-pub-3940256099942544/2247696110")
-            resValue("string", "AM_APPOPEN_AD_ID", "ca-app-pub-3940256099942544/9257395921")
+            resValue("string", "ADMOBE_ID", "ca-app-pub-1831800168999377~3928883472")
+            resValue("string", "AM_BANNER_AD_ID", "ca-app-pub-1831800168999377/4306343334")
+            resValue("string", "AM_INTER_AD_ID", "ca-app-pub-1831800168999377/6661043930")
+            resValue("string", "AM_SPLASH_APPOPEN_AD_ID", "ca-app-pub-1831800168999377/2502307071")
+            resValue("string", "AM_SPLASH_INTER_AD_ID", "ca-app-pub-1831800168999377/2687953997")
+            resValue("string", "AM_NATIVE_AD_ID", "ca-app-pub-1831800168999377/3184833352")
+            resValue("string", "AM_NATIVE_INTRO",  "ca-app-pub-1831800168999377/7996120996")
+            resValue("string", "AM_NATIVE_LANGUAGE", "ca-app-pub-1831800168999377/1189225400")
+            resValue("string", "AM_RECTANGLE_INTRO_ID", "ca-app-pub-1831800168999377/7748708982")
+            resValue("string", "AM_COLLAPSABLE_INTRO_ID", "ca-app-pub-1831800168999377/2559961482")
+            resValue("string", "AM_APPOPEN_AD_ID", "ca-app-pub-1831800168999377/5937108874")
         }
         debug {
             isMinifyEnabled = true
@@ -47,11 +50,14 @@ android {
             )
             resValue("string", "ADMOBE_ID", "ca-app-pub-4016151566711692~1327740831")
             resValue("string", "AM_BANNER_AD_ID", "ca-app-pub-3940256099942544/2014213617")
+            resValue("string", "AM_RECTANGLE_INTRO_ID", "ca-app-pub-3940256099942544/2014213617")
+            resValue("string", "AM_COLLAPSABLE_INTRO_ID", "ca-app-pub-3940256099942544/2014213617")
             resValue("string", "AM_INTER_AD_ID", "ca-app-pub-3940256099942544/1033173712")
             resValue("string", "AM_SPLASH_APPOPEN_AD_ID", "ca-app-pub-3940256099942544/9257395921")
             resValue("string", "AM_SPLASH_INTER_AD_ID", "ca-app-pub-3940256099942544/1033173712")
             resValue("string", "AM_NATIVE_AD_ID", "ca-app-pub-3940256099942544/2247696110")
             resValue("string", "AM_NATIVE_INTRO", "ca-app-pub-3940256099942544/2247696110")
+            resValue("string", "AM_NATIVE_LANGUAGE", "ca-app-pub-3940256099942544/2247696110")
             resValue("string", "AM_APPOPEN_AD_ID", "ca-app-pub-3940256099942544/9257395921")
         }
     }
