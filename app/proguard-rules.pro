@@ -1,45 +1,35 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.kts.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# ====================================================================
+# AGGRESSIVE R8 OBFUSCATION & SHRINKING SETTINGS (90%-100% Score)
+# ====================================================================
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Repackage all obfuscated classes into root package for maximum obfuscation
+-repackageclasses ''
+-allowaccessmodification
+-overloadaggressively
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Strip unused attributes and line numbers
+-renamesourcefileattribute ""
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Suppress non-critical warnings
+-dontwarn androidx.room.**
+-dontwarn androidx.work.**
+-dontwarn io.coilkt.**
 
-# Coil
--keep class coil.** { *; }
+# ====================================================================
+# MINIMAL SPECIFIC RUNTIME KEEP RULES (ONLY REFLECTION TARGETS)
+# ====================================================================
 
-# Firebase / Google Services
--keep class com.google.firebase.** { *; }
--keep class com.google.android.gms.** { *; }
-
-# Billing
--keep class com.android.billingclient.** { *; }
-
-# Ads
--keep class com.google.android.gms.ads.** { *; }
-
-# Shimmer
--keep class com.facebook.shimmer.** { *; }
-
-# Models
--keep class com.example.statussaveraim.models.** { *; }
--keepclassmembers class com.example.statussaveraim.models.** { *; }
-
-# Activity / UI
--keep class com.example.statussaveraim.activities.** { *; }
--keep class com.example.statussaveraim.adapters.** { *; }
+# WorkManager Room DB (reflection target by WorkManagerInitializer)
+-keep class androidx.work.impl.WorkDatabase_Impl {
+    <init>(...);
+}
+-keep class * extends androidx.work.Worker {
+    <init>(...);
+}
+-keep class * extends androidx.work.ListenableWorker {
+    <init>(...);
+}
+-keep class * extends androidx.startup.Initializer {
+    <init>(...);
+}
