@@ -12,6 +12,7 @@ import com.example.statussaveraim.models.WhatsAppModelClass
 
 class StatusAdapter(
     private var statusList: List<WhatsAppModelClass>,
+    private val onItemClicked: (WhatsAppModelClass) -> Unit,
     private val onDownloadClicked: (WhatsAppModelClass, Int) -> Unit
 ) : RecyclerView.Adapter<StatusAdapter.StatusViewHolder>() {
 
@@ -55,6 +56,10 @@ class StatusAdapter(
             }
 
             ivPlayVideo.visibility = if (status.isVideo) View.VISIBLE else View.GONE
+
+            root.setOnClickListener {
+                onItemClicked(status)
+            }
 
             if (savedStatusUris.contains(status.uri)) {
                 btnDownload.setImageResource(R.drawable.ic_check_green_circle)

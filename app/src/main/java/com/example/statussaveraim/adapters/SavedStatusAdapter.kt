@@ -11,6 +11,7 @@ import com.example.statussaveraim.models.WhatsAppModelClass
 
 class SavedStatusAdapter(
     private var statusList: List<WhatsAppModelClass>,
+    private val onItemClicked: (WhatsAppModelClass) -> Unit,
     private val onShareClicked: (WhatsAppModelClass) -> Unit,
     private val onDeleteClicked: (WhatsAppModelClass) -> Unit
 ) : RecyclerView.Adapter<SavedStatusAdapter.SavedStatusViewHolder>() {
@@ -43,6 +44,10 @@ class SavedStatusAdapter(
             }
 
             ivPlayVideo.visibility = if (status.isVideo) View.VISIBLE else View.GONE
+
+            root.setOnClickListener {
+                onItemClicked(status)
+            }
 
             btnShare.setOnClickListener {
                 onShareClicked(status)
