@@ -37,7 +37,7 @@ public class ShowAds {
     public static void backPressInterstitial(final Activity context, final InterstitialAd mInterstitialAd) {
         BillingHelper billing = new BillingHelper(context);
 
-        if (billing.shouldShowAds()) {
+        if (billing.shouldShowAds() && !LoadAds.backpressadcontrol) {
 
             if (Constants.INSTANCE.getIsAppOnTimer()) {
                 backPressForTimer(context, mInterstitialAd);

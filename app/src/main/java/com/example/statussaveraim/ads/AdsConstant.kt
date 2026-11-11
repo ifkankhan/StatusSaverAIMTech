@@ -27,7 +27,7 @@ object AdsConstant {
 
     var MainAdsControl: String? = null
 
-    var willAllAdsNotShow = true
+    var willAllAdsNotShow = false
     var isPurchase = false
     var RewardedIntestritialId = ""
     var RewarededvideoId = ""
@@ -60,9 +60,15 @@ object AdsConstant {
     var languagebottombanner = 3
     var languagebottomnative = 0
 
-    //Intro
+    //Intro1
     var intro1bottombanner = 1
     var intro1bottomnative = 0
+    //Intro2
+    var intro2bottombanner = 1
+    var intro2bottomnative = 0
+    //Intro3
+    var intro3bottombanner = 1
+    var intro3bottomnative = 0
 
     //Home
     var homebottombanner = 1

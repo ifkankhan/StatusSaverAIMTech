@@ -35,6 +35,8 @@ import com.example.statussaveraim.ads.AdMob_Native
 import com.example.statussaveraim.ads.AdsConstant.homebottombanner
 import com.example.statussaveraim.ads.AdsConstant.homebottomnative
 import com.example.statussaveraim.ads.BannerAdWork
+import com.example.statussaveraim.ads.LoadAds
+import com.example.statussaveraim.ads.ShowAds
 import com.example.statussaveraim.databinding.ActivityMainBinding
 import com.example.statussaveraim.models.WhatsAppModelClass
 import com.example.statussaveraim.utils.SharedPrefsHelper
@@ -54,6 +56,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         sharedPrefs = SharedPrefsHelper(this)
+        LoadAds.preLoadAdsHoneyBee(this)
         showingBottomAds()
         setupTabs()
         setupWhatsappSwitch()
@@ -63,7 +66,8 @@ class MainActivity : AppCompatActivity() {
 
         // Setting Top Right Icons Listeners
         binding.btnSettings.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
+            val intent=(Intent(this, SettingsActivity::class.java))
+            ShowAds.directAdsInterstitial(this, LoadAds.admobInterstitialAd,intent)
         }
 
         binding.btnHelp.setOnClickListener {
@@ -71,7 +75,9 @@ class MainActivity : AppCompatActivity() {
         }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                startActivity(Intent(this@MainActivity, ExitActivity::class.java))
+                val intent=(Intent(this@MainActivity, ExitActivity::class.java))
+
+                ShowAds.directAdsInterstitial(this@MainActivity, LoadAds.admobInterstitialAd,intent)
             }
         })
     }

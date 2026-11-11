@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.statussaveraim.R
 import com.example.statussaveraim.adapters.LanguageAdapter
 import com.example.statussaveraim.ads.AdMob_Native
 import com.example.statussaveraim.ads.AdsConstant.languagebottombanner
@@ -62,7 +63,8 @@ class LanguageActivity : AppCompatActivity() {
                 binding.NativeADBottom.topNativeAdFrameLayout,
                 this,
                 false,
-                this
+                this,
+                getString(R.string.AM_NATIVE_LANGUAGE)
             )
         }
     }

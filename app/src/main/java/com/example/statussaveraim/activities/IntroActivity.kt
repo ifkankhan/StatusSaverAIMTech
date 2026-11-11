@@ -8,16 +8,11 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.viewpager2.widget.ViewPager2
 import com.example.statussaveraim.R
 import com.example.statussaveraim.adapters.IntroAdapter
 import com.example.statussaveraim.ads.AdMob_Native
-import com.example.statussaveraim.ads.AdsConstant.homebottombanner
-import com.example.statussaveraim.ads.AdsConstant.homebottomnative
-import com.example.statussaveraim.ads.AdsConstant.intro1bottombanner
-import com.example.statussaveraim.ads.AdsConstant.intro1bottomnative
+import com.example.statussaveraim.ads.AdsConstant
 import com.example.statussaveraim.ads.BannerAdWork
 import com.example.statussaveraim.databinding.ActivityIntroBinding
 import com.example.statussaveraim.models.IntroModel
@@ -34,34 +29,9 @@ class IntroActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        showingBottomAds()
+
         setupViewPager()
         setupListeners()
-    }
-    fun showingBottomAds() {
-        if (intro1bottombanner != 0) {
-            BannerAdWork.showAdmobBanner(
-                intro1bottombanner,
-                this,
-                binding.bannerADBottom.bannerContainer,
-                false,
-                this
-            )
-        } else {
-            binding.bannerADBottom.bannerAdShimmerView.visibility = View.GONE
-            binding.bannerADBottom.bannerContainer.visibility = View.GONE
-            AdMob_Native.showNativeShimmer(
-                binding.NativeADBottom.shimmerLayout,
-                intro1bottomnative
-            )
-            AdMob_Native.showNativeAdmob(
-                intro1bottomnative,
-                binding.NativeADBottom.topNativeAdFrameLayout,
-                this,
-                false,
-                this
-            )
-        }
     }
     private fun setupViewPager() {
         val introList = listOf(
@@ -92,6 +62,7 @@ class IntroActivity : AppCompatActivity() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 setCurrentIndicator(position)
+                loadAdForPage(position)
                 if (position == introList.size - 1) {
                     binding.btnNext.text = getString(R.string.get_started)
                 } else {
@@ -99,6 +70,55 @@ class IntroActivity : AppCompatActivity() {
                 }
             }
         })
+    }
+
+    private fun loadAdForPage(position: Int) {
+        val (bannerControl, nativeControl) = when (position) {
+            0 -> Pair(AdsConstant.intro1bottombanner, AdsConstant.intro1bottomnative)
+            1 -> Pair(AdsConstant.intro2bottombanner, AdsConstant.intro2bottomnative)
+            2 -> Pair(AdsConstant.intro3bottombanner, AdsConstant.intro3bottomnative)
+            else -> Pair(AdsConstant.intro1bottombanner, AdsConstant.intro1bottomnative)
+        }
+
+        if (bannerControl != 0) {
+            binding.bottomAds.NativeADBottom.root.visibility = View.GONE
+            binding.bottomAds.bannerADBottom.root.visibility = View.VISIBLE
+            binding.bottomAds.root.visibility = View.VISIBLE
+            binding.bottomAds.bannerADBottom.bannerAdShimmerView.visibility = View.VISIBLE
+            binding.bottomAds.bannerADBottom.bannerAdShimmerView.startShimmer()
+            val adID=if(bannerControl==1 || bannerControl==5 || bannerControl==4){
+                R.string.AM_RECTANGLE_INTRO_ID
+            }else{
+                R.string.AM_COLLAPSABLE_INTRO_ID
+            }
+            BannerAdWork.loadFreshBanner(
+                bannerControl,
+                this,
+                binding.bottomAds.bannerADBottom.bannerContainer,
+                getString(adID)
+            )
+        } else if (nativeControl != 0) {
+            binding.bottomAds.bannerADBottom.root.visibility = View.GONE
+            binding.bottomAds.NativeADBottom.root.visibility = View.VISIBLE
+            binding.bottomAds.root.visibility = View.VISIBLE
+
+            binding.bottomAds.NativeADBottom.nativeAdShimmerView.visibility = View.VISIBLE
+            binding.bottomAds.NativeADBottom.nativeAdShimmerView.startShimmer()
+            AdMob_Native.showNativeShimmer(
+                binding.bottomAds.NativeADBottom.shimmerLayout,
+                nativeControl
+            )
+            AdMob_Native.loadFreshNative(
+                nativeControl,
+                binding.bottomAds.NativeADBottom.topNativeAdFrameLayout,
+                this,
+                getString(R.string.AM_NATIVE_INTRO)
+            )
+        } else {
+            binding.bottomAds.bannerADBottom.root.visibility = View.GONE
+            binding.bottomAds.NativeADBottom.root.visibility = View.GONE
+            binding.bottomAds.root.visibility = View.GONE
+        }
     }
 
     private fun setupIndicators(count: Int) {

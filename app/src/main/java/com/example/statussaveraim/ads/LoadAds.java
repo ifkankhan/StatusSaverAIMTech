@@ -22,6 +22,7 @@ public class LoadAds {
 
     public static boolean shouldShowAdmob = true;
     public static boolean isAdsShow = true;
+    public static boolean backpressadcontrol = true;
     public static boolean should_show_app_open = true;
     public static PreloadCallbackV2 preloadCallback;
 
