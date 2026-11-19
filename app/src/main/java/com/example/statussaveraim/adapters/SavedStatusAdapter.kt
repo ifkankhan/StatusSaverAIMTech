@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.decode.VideoFrameDecoder
 import coil.load
+import coil.size.Scale
 import com.example.statussaveraim.databinding.ItemSavedStatusBinding
 import com.example.statussaveraim.models.WhatsAppModelClass
 
@@ -17,6 +18,11 @@ class SavedStatusAdapter(
 ) : RecyclerView.Adapter<SavedStatusAdapter.SavedStatusViewHolder>() {
 
     fun updateList(newList: List<WhatsAppModelClass>) {
+        if (statusList.size == newList.size &&
+            statusList.indices.all { statusList[it].uri == newList[it].uri }
+        ) {
+            return
+        }
         statusList = newList
         notifyDataSetChanged()
     }
@@ -35,7 +41,9 @@ class SavedStatusAdapter(
 
         with(holder.binding) {
             ivStatus.load(status.uri) {
-                crossfade(true)
+                size(360)
+                scale(Scale.FILL)
+                crossfade(false)
                 if (status.isVideo) {
                     decoderFactory { result, options, _ ->
                         VideoFrameDecoder(result.source, options)

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Status Saver</string>
     <string name="status_saver">Status Saver</string>
+    <string name="download">Download</string>
     <string name="fast_direct_status_downloader">Fast &amp; Direct Status Downloader</string>
     <string name="continue_text">Continue</string>
     <string name="icon_border_desc">Icon border</string>

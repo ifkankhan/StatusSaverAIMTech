@@ -6,31 +6,35 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.decode.VideoFrameDecoder
 import coil.load
+import coil.size.Scale
 import com.example.statussaveraim.R
 import com.example.statussaveraim.databinding.ItemStatusBinding
 import com.example.statussaveraim.models.WhatsAppModelClass
 
 class StatusAdapter(
     private var statusList: List<WhatsAppModelClass>,
+    private val savedStatusUris: Set<String>,
     private val onItemClicked: (WhatsAppModelClass) -> Unit,
     private val onDownloadClicked: (WhatsAppModelClass, Int) -> Unit
 ) : RecyclerView.Adapter<StatusAdapter.StatusViewHolder>() {
 
-    private val savedStatusUris = mutableSetOf<String>()
-
     fun updateList(newList: List<WhatsAppModelClass>) {
+        if (sameUris(statusList, newList)) return
         statusList = newList
         notifyDataSetChanged()
     }
 
-    fun markAsSaved(uri: String) {
-        savedStatusUris.add(uri)
-        // Find index and update just that item if needed, 
-        // or rely on notifyDataSetChanged since we just downloaded one.
+    fun notifySaved(uri: String) {
         val index = statusList.indexOfFirst { it.uri == uri }
-        if (index != -1) {
-            notifyItemChanged(index)
+        if (index != -1) notifyItemChanged(index)
+    }
+
+    private fun sameUris(current: List<WhatsAppModelClass>, next: List<WhatsAppModelClass>): Boolean {
+        if (current.size != next.size) return false
+        for (i in current.indices) {
+            if (current[i].uri != next[i].uri) return false
         }
+        return true
     }
 
     inner class StatusViewHolder(val binding: ItemStatusBinding) : RecyclerView.ViewHolder(binding.root)
@@ -47,7 +51,9 @@ class StatusAdapter(
 
         with(holder.binding) {
             ivStatus.load(status.uri) {
-                crossfade(true)
+                size(360)
+                scale(Scale.FILL)
+                crossfade(false)
                 if (status.isVideo) {
                     decoderFactory { result, options, _ ->
                         VideoFrameDecoder(result.source, options)
@@ -61,14 +67,14 @@ class StatusAdapter(
                 onItemClicked(status)
             }
 
-            if (savedStatusUris.contains(status.uri)) {
-                btnDownload.setImageResource(R.drawable.ic_check_green_circle)
-                btnDownload.setOnClickListener(null) // Disable clicking if already saved
-            } else {
-                btnDownload.setImageResource(R.drawable.ic_download_orange)
-                btnDownload.setOnClickListener {
-                    onDownloadClicked(status, position)
-                }
+            val alreadySaved = savedStatusUris.contains(status.uri)
+            btnDownload.setImageResource(
+                if (alreadySaved) R.drawable.ic_check_green_circle else R.drawable.ic_download_orange
+            )
+            btnDownload.bringToFront()
+            btnDownload.setOnClickListener {
+                if (alreadySaved) return@setOnClickListener
+                onDownloadClicked(status, holder.bindingAdapterPosition)
             }
         }
     }

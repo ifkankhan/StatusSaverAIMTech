@@ -9,14 +9,18 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.text.Html
 import android.util.Log
+import android.view.Gravity
 import android.view.View
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.MediaController
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import android.widget.VideoView
@@ -25,8 +29,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import coil.load
 import com.example.statussaveraim.R
 import com.example.statussaveraim.adapters.SavedStatusAdapter
@@ -50,6 +58,27 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var sharedPrefs: SharedPrefsHelper
     private var currentTabIndex = 0
+    private var loadedSourceKey: String? = null
+    private var loadToken = 0
+
+    private var permissionView: View? = null
+    private var imagePage: View? = null
+    private var videoPage: View? = null
+    private var savedPage: View? = null
+    private var imageAdapter: StatusAdapter? = null
+    private var videoAdapter: StatusAdapter? = null
+    private var savedAdapter: SavedStatusAdapter? = null
+
+    private val savedStatusUris = mutableSetOf<String>()
+    private val savingUris = mutableSetOf<String>()
+
+    private val loadingView: ProgressBar by lazy {
+        ProgressBar(this).apply {
+            isIndeterminate = true
+            val size = (48 * resources.displayMetrics.density).toInt()
+            layoutParams = FrameLayout.LayoutParams(size, size, Gravity.CENTER)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,9 +89,6 @@ class MainActivity : AppCompatActivity() {
         showingBottomAds()
         setupTabs()
         setupWhatsappSwitch()
-        
-        // Load initial state based on permissions
-        loadContentState()
 
         // Setting Top Right Icons Listeners
         binding.btnSettings.setOnClickListener {
@@ -136,9 +162,7 @@ class MainActivity : AppCompatActivity() {
             // Toggle the state
             sharedPrefs.isWhatsappBusinessSelected = !sharedPrefs.isWhatsappBusinessSelected
             updateSwitchUI()
-            
-            // Reload the content based on the new selection
-            loadContentState()
+            refreshContent()
         }
     }
 
@@ -189,20 +213,18 @@ class MainActivity : AppCompatActivity() {
         tabSaved: LinearLayout
     ) {
         currentTabIndex = selectedIndex
-        
-        // Reset all tabs
+
         resetTab(tabImage, R.drawable.images_main_top_bar)
         resetTab(tabVideo, R.drawable.video_top_bar)
         resetTab(tabSaved, R.drawable.saved_top_bar)
 
-        // Select specific tab
         when (selectedIndex) {
             0 -> selectTab(tabImage, R.drawable.images_main_top_bar)
             1 -> selectTab(tabVideo, R.drawable.video_top_bar)
             2 -> selectTab(tabSaved, R.drawable.saved_top_bar)
         }
 
-        loadContentState()
+        showCurrentTab()
     }
 
     private fun selectTab(tabLayout: LinearLayout, iconRes: Int) {
@@ -240,117 +262,276 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadContentState() {
-        binding.fragmentContainer.removeAllViews()
+    private fun currentSourceKey(): String? {
+        val path = currentStatusPath() ?: return null
+        return "${sharedPrefs.isWhatsappBusinessSelected}|$path"
+    }
 
+    private fun currentStatusPath(): String? {
+        val prefs = getSharedPreferences("app_settings", MODE_PRIVATE)
+        return if (sharedPrefs.isWhatsappBusinessSelected) {
+            prefs.getString("business_path", null)
+        } else {
+            prefs.getString("whatsapp_path", null)
+        }
+    }
+
+    private fun refreshContent() {
         if (!hasPermissionForSelectedApp()) {
-            // Show Permission Required Layout
-            val view = layoutInflater.inflate(R.layout.fragment_permission_required, binding.fragmentContainer, false)
+            showPermissionRequired()
+            return
+        }
+
+        val sourceKey = currentSourceKey()
+        if (sourceKey == null) {
+            loadToken++
+            loadedSourceKey = null
+            hidePermission()
+            dropStatusPages()
+            bindImagePage(emptyList())
+            bindVideoPage(emptyList())
+            showCurrentTab()
+            refreshSavedOnly()
+            return
+        }
+
+        if (sourceKey != loadedSourceKey) {
+            loadedSourceKey = sourceKey
+            dropStatusPages()
+        }
+        hidePermission()
+
+        val token = ++loadToken
+        showLoadingIfEmpty()
+        val path = sourceKey.substringAfter("|")
+
+        lifecycleScope.launch {
+            val split = withContext(Dispatchers.IO) {
+                fetchStatusesSplit(Uri.parse(path))
+            }
+            val saved = withContext(Dispatchers.IO) { getSavedFiles() }
+            if (token != loadToken || isFinishing || isDestroyed) return@launch
+            if (sourceKey != loadedSourceKey) return@launch
+
+            hideLoading()
+            bindImagePage(split.first)
+            bindVideoPage(split.second)
+            bindSavedPage(saved)
+            showCurrentTab()
+        }
+    }
+
+    private fun refreshSavedOnly() {
+        lifecycleScope.launch {
+            val saved = withContext(Dispatchers.IO) { getSavedFiles() }
+            if (isFinishing || isDestroyed || !hasPermissionForSelectedApp()) return@launch
+            bindSavedPage(saved)
+            showCurrentTab()
+        }
+    }
+
+    private fun tabVisibility(tabIndex: Int): Int {
+        return if (currentTabIndex == tabIndex) View.VISIBLE else View.GONE
+    }
+
+    private fun showPermissionRequired() {
+        loadToken++
+        loadedSourceKey = null
+        if (permissionView?.parent != null && imagePage == null && videoPage == null && savedPage == null) {
+            return
+        }
+        dropStatusPages()
+        hideLoading()
+        binding.fragmentContainer.removeAllViews()
+        val view = layoutInflater.inflate(R.layout.fragment_permission_required, binding.fragmentContainer, false)
+        view.findViewById<Button>(R.id.btnAllow).setOnClickListener {
+            startActivity(Intent(this, PermissionActivity::class.java))
+        }
+        permissionView = view
+        binding.fragmentContainer.addView(view)
+    }
+
+    private fun hidePermission() {
+        permissionView?.let {
+            if (it.parent != null) binding.fragmentContainer.removeView(it)
+        }
+        permissionView = null
+    }
+
+    private fun dropStatusPages() {
+        imagePage?.let { binding.fragmentContainer.removeView(it) }
+        videoPage?.let { binding.fragmentContainer.removeView(it) }
+        savedPage?.let { binding.fragmentContainer.removeView(it) }
+        imagePage = null
+        videoPage = null
+        savedPage = null
+        imageAdapter = null
+        videoAdapter = null
+        savedAdapter = null
+    }
+
+    private fun showLoadingIfEmpty() {
+        if (imagePage != null || videoPage != null || savedPage != null) return
+        if (loadingView.parent == null) {
+            binding.fragmentContainer.addView(loadingView)
+        }
+    }
+
+    private fun hideLoading() {
+        if (loadingView.parent != null) {
+            binding.fragmentContainer.removeView(loadingView)
+        }
+    }
+
+    private fun showCurrentTab() {
+        imagePage?.visibility = tabVisibility(0)
+        videoPage?.visibility = tabVisibility(1)
+        savedPage?.visibility = tabVisibility(2)
+    }
+
+    private fun bindImagePage(files: List<WhatsAppModelClass>) {
+        imagePage = bindStatusPage(
+            existing = imagePage,
+            existingAdapter = imageAdapter,
+            files = files,
+            tabIndex = 0,
+            createAdapter = { list ->
+                StatusAdapter(
+                    statusList = list,
+                    savedStatusUris = savedStatusUris,
+                    onItemClicked = { model -> openFullMediaDialog(model) },
+                    onDownloadClicked = { model, _ -> downloadStatus(model) }
+                ).also { imageAdapter = it }
+            }
+        )
+    }
+
+    private fun bindVideoPage(files: List<WhatsAppModelClass>) {
+        videoPage = bindStatusPage(
+            existing = videoPage,
+            existingAdapter = videoAdapter,
+            files = files,
+            tabIndex = 1,
+            createAdapter = { list ->
+                StatusAdapter(
+                    statusList = list,
+                    savedStatusUris = savedStatusUris,
+                    onItemClicked = { model -> openFullMediaDialog(model) },
+                    onDownloadClicked = { model, _ -> downloadStatus(model) }
+                ).also { videoAdapter = it }
+            }
+        )
+    }
+
+    private fun bindStatusPage(
+        existing: View?,
+        existingAdapter: StatusAdapter?,
+        files: List<WhatsAppModelClass>,
+        tabIndex: Int,
+        createAdapter: (List<WhatsAppModelClass>) -> StatusAdapter
+    ): View {
+        if (files.isEmpty()) {
+            if (existing != null && existing.findViewById<Button>(R.id.btnGoToWhatsapp) != null) {
+                existing.visibility = tabVisibility(tabIndex)
+                return existing
+            }
+            existing?.let { binding.fragmentContainer.removeView(it) }
+            if (tabIndex == 0) imageAdapter = null else videoAdapter = null
+            val view = layoutInflater.inflate(R.layout.fragment_no_status, binding.fragmentContainer, false)
+            view.findViewById<Button>(R.id.btnGoToWhatsapp)?.setOnClickListener { openWhatsapp() }
+            view.visibility = tabVisibility(tabIndex)
             binding.fragmentContainer.addView(view)
-            
-            // Setup Allow Button
-            view.findViewById<Button>(R.id.btnAllow).setOnClickListener {
-                val intent = Intent(this, PermissionActivity::class.java)
-                startActivity(intent)
-            }
-        } else {
-            // Permission Granted, show actual content based on tab
-            val targetPath = if (sharedPrefs.isWhatsappBusinessSelected) {
-                getSharedPreferences("app_settings", MODE_PRIVATE).getString("business_path", null)
-            } else {
-                getSharedPreferences("app_settings", MODE_PRIVATE).getString("whatsapp_path", null)
-            }
-
-            if (currentTabIndex == 2) {
-                // SAVED TAB
-                val savedFiles = getSavedFiles()
-                if (savedFiles.isEmpty()) {
-                    val view = layoutInflater.inflate(R.layout.fragment_nothing_saved_yet, binding.fragmentContainer, false)
-                    binding.fragmentContainer.addView(view)
-                    view.findViewById<Button>(R.id.btnBrowse)?.setOnClickListener {
-                        binding.tabImage.performClick()
-                    }
-                } else {
-                    setupSavedRecyclerView(savedFiles)
-                }
-            } else {
-                // IMAGE (0) OR VIDEO (1) TAB
-                if (targetPath != null) {
-                    val files = fetchStatusesFromUri(Uri.parse(targetPath), isVideoTab = currentTabIndex == 1)
-                    if (files.isEmpty()) {
-                        val view = layoutInflater.inflate(R.layout.fragment_no_status, binding.fragmentContainer, false)
-                        binding.fragmentContainer.addView(view)
-                        view.findViewById<Button>(R.id.btnGoToWhatsapp)?.setOnClickListener {
-                            openWhatsapp()
-                        }
-                    } else {
-                        setupRecyclerView(files)
-                    }
-                } else {
-                    // Fallback to error/empty state if path is inexplicably missing
-                    val view = layoutInflater.inflate(R.layout.fragment_no_status, binding.fragmentContainer, false)
-                    binding.fragmentContainer.addView(view)
-                    view.findViewById<Button>(R.id.btnGoToWhatsapp)?.setOnClickListener {
-                        openWhatsapp()
-                    }
-                }
-            }
+            return view
         }
+
+        if (existing != null && existingAdapter != null &&
+            existing.findViewById<RecyclerView>(R.id.rvStatuses) != null
+        ) {
+            existingAdapter.updateList(files)
+            existing.visibility = tabVisibility(tabIndex)
+            return existing
+        }
+
+        existing?.let { binding.fragmentContainer.removeView(it) }
+        val view = layoutInflater.inflate(R.layout.fragment_status_grid, binding.fragmentContainer, false)
+        val rv = view.findViewById<RecyclerView>(R.id.rvStatuses)
+        configureStatusRecycler(rv)
+        rv.adapter = createAdapter(files)
+        view.findViewById<TextView>(R.id.tvEmptyState)?.visibility = View.GONE
+        view.visibility = tabVisibility(tabIndex)
+        binding.fragmentContainer.addView(view)
+        return view
     }
 
-    private fun setupRecyclerView(list: List<WhatsAppModelClass>) {
-        val view = layoutInflater.inflate(R.layout.fragment_status_grid, binding.fragmentContainer, false)
-        binding.fragmentContainer.addView(view)
-
-        val rv = view.findViewById<RecyclerView>(R.id.rvStatuses)
-        val tvEmpty = view.findViewById<TextView>(R.id.tvEmptyState)
-
-        if (list.isEmpty()) {
-            rv.visibility = View.GONE
-            tvEmpty.visibility = View.VISIBLE
-        } else {
-            rv.visibility = View.VISIBLE
-            tvEmpty.visibility = View.GONE
-            rv.layoutManager = GridLayoutManager(this, 3)
-            val adapter = StatusAdapter(
-                statusList = list,
-                onItemClicked = { model -> openFullMediaDialog(model) },
-                onDownloadClicked = { model, position ->
-                    val destUri = saveStatusItem(model)
-                    if (destUri != null) {
-                        Toast.makeText(this, "Saved to Gallery!", Toast.LENGTH_SHORT).show()
-                        (rv.adapter as StatusAdapter).markAsSaved(model.uri)
-                    } else {
-                        Toast.makeText(this, "Failed to save", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            )
-            rv.adapter = adapter
+    private fun bindSavedPage(files: List<WhatsAppModelClass>) {
+        if (files.isEmpty()) {
+            if (savedPage?.findViewById<Button>(R.id.btnBrowse) != null) {
+                savedPage?.visibility = tabVisibility(2)
+                return
+            }
+            savedPage?.let { binding.fragmentContainer.removeView(it) }
+            savedAdapter = null
+            val view = layoutInflater.inflate(R.layout.fragment_nothing_saved_yet, binding.fragmentContainer, false)
+            view.findViewById<Button>(R.id.btnBrowse)?.setOnClickListener {
+                binding.tabImage.performClick()
+            }
+            view.visibility = tabVisibility(2)
+            binding.fragmentContainer.addView(view)
+            savedPage = view
+            return
         }
+
+        val recycler = savedPage?.findViewById<RecyclerView>(R.id.rvStatuses)
+        if (recycler != null && savedAdapter != null) {
+            savedAdapter?.updateList(files)
+            savedPage?.visibility = tabVisibility(2)
+            return
+        }
+
+        savedPage?.let { binding.fragmentContainer.removeView(it) }
+        val view = layoutInflater.inflate(R.layout.fragment_status_grid, binding.fragmentContainer, false)
+        val rv = view.findViewById<RecyclerView>(R.id.rvStatuses)
+        configureStatusRecycler(rv)
+        val adapter = SavedStatusAdapter(
+            statusList = files,
+            onItemClicked = { model -> openFullMediaDialog(model) },
+            onShareClicked = { model -> shareStatus(model) },
+            onDeleteClicked = { model -> deleteStatus(model) }
+        )
+        rv.adapter = adapter
+        view.findViewById<TextView>(R.id.tvEmptyState)?.visibility = View.GONE
+        view.visibility = tabVisibility(2)
+        binding.fragmentContainer.addView(view)
+        savedPage = view
+        savedAdapter = adapter
     }
 
-    private fun setupSavedRecyclerView(list: List<WhatsAppModelClass>) {
-        val view = layoutInflater.inflate(R.layout.fragment_status_grid, binding.fragmentContainer, false)
-        binding.fragmentContainer.addView(view)
+    private fun configureStatusRecycler(rv: RecyclerView) {
+        rv.setHasFixedSize(true)
+        rv.setItemViewCacheSize(12)
+        rv.itemAnimator = null
+        rv.layoutManager = GridLayoutManager(this, 3)
+    }
 
-        val rv = view.findViewById<RecyclerView>(R.id.rvStatuses)
-        val tvEmpty = view.findViewById<TextView>(R.id.tvEmptyState)
-
-        if (list.isEmpty()) {
-            rv.visibility = View.GONE
-            tvEmpty.visibility = View.VISIBLE
-        } else {
-            rv.visibility = View.VISIBLE
-            tvEmpty.visibility = View.GONE
-            rv.layoutManager = GridLayoutManager(this, 3)
-            
-            val adapter = SavedStatusAdapter(
-                statusList = list,
-                onItemClicked = { model -> openFullMediaDialog(model) },
-                onShareClicked = { model -> shareStatus(model) },
-                onDeleteClicked = { model -> deleteStatus(model) }
-            )
-            rv.adapter = adapter
+    private fun downloadStatus(model: WhatsAppModelClass, onDone: ((Boolean) -> Unit)? = null) {
+        if (model.uri in savedStatusUris || !savingUris.add(model.uri)) {
+            onDone?.invoke(model.uri in savedStatusUris)
+            return
+        }
+        lifecycleScope.launch {
+            val destUri = withContext(Dispatchers.IO) { saveStatusItem(model) }
+            savingUris.remove(model.uri)
+            val success = destUri != null
+            if (success) {
+                savedStatusUris.add(model.uri)
+                imageAdapter?.notifySaved(model.uri)
+                videoAdapter?.notifySaved(model.uri)
+                Toast.makeText(this@MainActivity, "Saved to Gallery!", Toast.LENGTH_SHORT).show()
+                refreshSavedOnly()
+            } else if (!isFinishing) {
+                Toast.makeText(this@MainActivity, "Failed to save", Toast.LENGTH_SHORT).show()
+            }
+            onDone?.invoke(success)
         }
     }
 
@@ -368,6 +549,25 @@ class MainActivity : AppCompatActivity() {
 
         btnShare?.setOnClickListener {
             shareStatus(model)
+        }
+
+        val btnDownload = dialogView.findViewById<ImageView>(R.id.btnDownload)
+        if (currentTabIndex == 2) {
+            btnDownload?.visibility = View.GONE
+        } else {
+            fun renderDownload() {
+                val saved = model.uri in savedStatusUris
+                btnDownload?.setImageResource(
+                    if (saved) R.drawable.ic_check_green_circle else R.drawable.ic_download_orange
+                )
+            }
+            renderDownload()
+            btnDownload?.setOnClickListener {
+                if (model.uri in savedStatusUris) return@setOnClickListener
+                downloadStatus(model) { success ->
+                    if (success && dialog.isShowing) renderDownload()
+                }
+            }
         }
 
         val uri = Uri.parse(model.uri)
@@ -441,46 +641,101 @@ class MainActivity : AppCompatActivity() {
         }
 
         dialogView.findViewById<Button>(R.id.btnDelete).setOnClickListener {
-            try {
-                val uri = Uri.parse(model.uri)
-                contentResolver.delete(uri, null, null)
-                Toast.makeText(this, "Deleted successfully", Toast.LENGTH_SHORT).show()
-                loadContentState() // Reload the grid to remove the deleted item
-            } catch (e: Exception) {
-                Log.e("DeleteStatus", "Failed to delete", e)
-                Toast.makeText(this, "Failed to delete", Toast.LENGTH_SHORT).show()
-            }
             dialog.dismiss()
+            lifecycleScope.launch {
+                val deleted = withContext(Dispatchers.IO) {
+                    try {
+                        contentResolver.delete(Uri.parse(model.uri), null, null) > 0
+                    } catch (e: Exception) {
+                        Log.e("DeleteStatus", "Failed to delete", e)
+                        false
+                    }
+                }
+                if (isFinishing || isDestroyed) return@launch
+                if (deleted) {
+                    Toast.makeText(this@MainActivity, "Deleted successfully", Toast.LENGTH_SHORT).show()
+                    refreshSavedOnly()
+                } else {
+                    Toast.makeText(this@MainActivity, "Failed to delete", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         dialog.show()
     }
     
-    private fun fetchStatusesFromUri(treeUri: Uri, isVideoTab: Boolean): List<WhatsAppModelClass> {
-        val list = mutableListOf<WhatsAppModelClass>()
+    private fun fetchStatusesSplit(treeUri: Uri): Pair<List<WhatsAppModelClass>, List<WhatsAppModelClass>> {
+        val images = mutableListOf<WhatsAppModelClass>()
+        val videos = mutableListOf<WhatsAppModelClass>()
         try {
-            val documentFile = DocumentFile.fromTreeUri(this, treeUri)
-            documentFile?.listFiles()?.forEach { file ->
-                if (!file.isDirectory && file.name?.startsWith(".") == false) {
-                    val isVideo = file.name?.endsWith(".mp4", true) == true
-                    val isImage = file.name?.endsWith(".jpg", true) == true || file.name?.endsWith(".png", true) == true
-                    
-                    if ((isVideoTab && isVideo) || (!isVideoTab && isImage)) {
-                        list.add(
-                            WhatsAppModelClass(
-                                name = file.name ?: "Unknown",
-                                uri = file.uri.toString(),
-                                date = file.lastModified().toString(),
-                                isVideo = isVideo
-                            )
-                        )
+            if (DocumentsContract.isTreeUri(treeUri)) {
+                val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(
+                    treeUri,
+                    DocumentsContract.getTreeDocumentId(treeUri)
+                )
+                val projection = arrayOf(
+                    DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                    DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                    DocumentsContract.Document.COLUMN_MIME_TYPE,
+                    DocumentsContract.Document.COLUMN_LAST_MODIFIED
+                )
+                contentResolver.query(childrenUri, projection, null, null, null)?.use { cursor ->
+                    val idCol = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+                    val nameCol = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+                    val mimeCol = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)
+                    val dateCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
+                    while (cursor.moveToNext()) {
+                        val name = cursor.getString(nameCol) ?: continue
+                        if (name.startsWith(".")) continue
+                        val mime = cursor.getString(mimeCol) ?: ""
+                        if (mime == DocumentsContract.Document.MIME_TYPE_DIR) continue
+                        val isVideo = mime.startsWith("video/") || name.endsWith(".mp4", true)
+                        val isImage = mime.startsWith("image/") ||
+                            name.endsWith(".jpg", true) ||
+                            name.endsWith(".jpeg", true) ||
+                            name.endsWith(".png", true)
+                        if (!isVideo && !isImage) continue
+                        val docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, cursor.getString(idCol))
+                        val date = if (dateCol >= 0 && !cursor.isNull(dateCol)) {
+                            cursor.getLong(dateCol).toString()
+                        } else {
+                            "0"
+                        }
+                        val model = WhatsAppModelClass(name, docUri.toString(), date, isVideo)
+                        if (isVideo) videos.add(model) else images.add(model)
                     }
-                }
+                } ?: return fetchStatusesWithDocumentFile(treeUri)
+            } else {
+                return fetchStatusesWithDocumentFile(treeUri)
             }
         } catch (e: Exception) {
             Log.e("FetchStatus", "Error fetching from treeUri: $treeUri", e)
+            return fetchStatusesWithDocumentFile(treeUri)
         }
-        return list.sortedByDescending { it.date }
+        images.sortByDescending { it.date.toLongOrNull() ?: 0L }
+        videos.sortByDescending { it.date.toLongOrNull() ?: 0L }
+        return images to videos
+    }
+
+    private fun fetchStatusesWithDocumentFile(treeUri: Uri): Pair<List<WhatsAppModelClass>, List<WhatsAppModelClass>> {
+        val images = mutableListOf<WhatsAppModelClass>()
+        val videos = mutableListOf<WhatsAppModelClass>()
+        try {
+            DocumentFile.fromTreeUri(this, treeUri)?.listFiles()?.forEach { file ->
+                if (file.isDirectory || file.name?.startsWith(".") != false) return@forEach
+                val name = file.name ?: return@forEach
+                val isVideo = name.endsWith(".mp4", true)
+                val isImage = name.endsWith(".jpg", true) || name.endsWith(".jpeg", true) || name.endsWith(".png", true)
+                if (!isVideo && !isImage) return@forEach
+                val model = WhatsAppModelClass(name, file.uri.toString(), file.lastModified().toString(), isVideo)
+                if (isVideo) videos.add(model) else images.add(model)
+            }
+        } catch (e: Exception) {
+            Log.e("FetchStatus", "DocumentFile fallback failed: $treeUri", e)
+        }
+        images.sortByDescending { it.date.toLongOrNull() ?: 0L }
+        videos.sortByDescending { it.date.toLongOrNull() ?: 0L }
+        return images to videos
     }
 
     private fun getSavedFiles(): List<WhatsAppModelClass> {
@@ -541,48 +796,54 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveStatusItem(model: WhatsAppModelClass): Uri? {
-        try {
+        return try {
             val sourceUri = Uri.parse(model.uri)
-            val inputStream = contentResolver.openInputStream(sourceUri) ?: return null
-
-            val values = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, model.name)
-                put(MediaStore.MediaColumns.MIME_TYPE, if (model.isVideo) "video/mp4" else "image/jpeg")
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/StatusSaver")
-                } else {
-                    val directory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "StatusSaver")
-                    if (!directory.exists()) directory.mkdirs()
-                    val file = File(directory, model.name)
-                    put(MediaStore.MediaColumns.DATA, file.absolutePath)
+            contentResolver.openInputStream(sourceUri)?.use { inputStream ->
+                val values = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, model.name)
+                    put(MediaStore.MediaColumns.MIME_TYPE, if (model.isVideo) "video/mp4" else "image/jpeg")
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/StatusSaver")
+                    } else {
+                        val directory = File(
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                            "StatusSaver"
+                        )
+                        if (!directory.exists()) directory.mkdirs()
+                        put(MediaStore.MediaColumns.DATA, File(directory, model.name).absolutePath)
+                    }
                 }
-            }
 
-            val collection = if (model.isVideo) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                val collection = if (model.isVideo) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                    } else {
+                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                    }
                 } else {
-                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                    } else {
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    }
                 }
-            } else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-                } else {
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                }
-            }
 
-            val destUri = contentResolver.insert(collection, values)
-            if (destUri != null) {
-                contentResolver.openOutputStream(destUri)?.use { outputStream ->
+                val destUri = contentResolver.insert(collection, values) ?: return@use null
+                val copied = contentResolver.openOutputStream(destUri)?.use { outputStream ->
                     inputStream.copyTo(outputStream)
+                    true
+                } ?: false
+                if (!copied) {
+                    contentResolver.delete(destUri, null, null)
+                    null
+                } else {
+                    destUri
                 }
-                return destUri
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            null
         }
-        return null
     }
     
     private fun openWhatsapp() {
@@ -602,9 +863,8 @@ class MainActivity : AppCompatActivity() {
     
     override fun onResume() {
         super.onResume()
-        // Refresh content in case permissions were granted in PermissionActivity
         if (::sharedPrefs.isInitialized) {
-            loadContentState()
+            refreshContent()
         }
     }
 }
